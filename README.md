@@ -1,42 +1,27 @@
 # meris_cosmos
 
-Norns MIDI controller for Meris pedals — LVX, Enzo, Polymoon, Mercury 7, Ottobit Jr. Preset management, musical randomization, auto-morph LFO, tempo sync via norns clock.
-
-## Description
-
-Meris Cosmos transforms norns into a comprehensive controller for your Meris pedal collection. Manage presets, send musical randomization, trigger auto-morph LFO sequences, and synchronize tempo with the norns clock. Support for all major Meris pedals: LVX, Enzo, Polymoon, Mercury 7, and Ottobit Jr.
-
-Perfect for live performance integration, preset browsing, and parameter exploration of your Meris effects.
-
-## Installation
-
-`;install https://github.com/jamminstein/meris_cosmos`
+> MIDI controller for Meris pedals (LVX, ENZO, POLYMOON, MERCURY 7, OTTOBIT JR)
 
 ## Controls
 
-- **E1**: Select pedal
-- **E2**: Select preset
-- **E3**: Randomize parameters
-- **K1**: Panic (reset all)
-- **K2**: Send current preset
-- **K3**: Toggle auto-morph LFO
+- **E1** — select pedal
+- **E2** — select preset (1–8 per pedal)
+- **E3** — randomize current pedal
+- **K1** — panic: safe-init all pedals
+- **K2** — send selected preset to selected pedal
+- **K3** — toggle auto-morph (slow LFO across wet/mod parameters)
 
-## Features
+## Grid
 
-- Support for 5 Meris pedal models
-- Preset browsing and management
-- Musical randomization engine
-- Auto-morph LFO with customizable speed
-- Norns clock tempo sync
-- Per-pedal configuration
-- MIDI CC control mapping
+None (preset selection via encoders).
 
 ## Requirements
 
 - norns
-- MIDI interface
-- One or more Meris pedals (LVX, Enzo, Polymoon, Mercury 7, or Ottobit Jr.)
+- MIDI device (connected to Meris pedals)
 
-## Author
+## Install
 
-@jamminstein
+```
+;install https://github.com/jamminstein/meris_cosmos
+```
