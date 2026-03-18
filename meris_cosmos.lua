@@ -46,6 +46,42 @@ local g = nil
 -- ─── MIDI channel assignments ─────────────────────────────────
 local CH = { LVX=1, ENZO=2, POLYMOON=3, MERCURY7=4, OTTOBIT=5 }
 
+-- NEW: Pedal model configuration
+local PEDAL_MODELS = {
+  Mercury7 = "MERCURY7",
+  Polymoon = "POLYMOON",
+  Hedra = "LVX",        -- similar CC structure
+  Ottobit = "OTTOBIT",
+  LVX = "LVX",
+  Enzo = "ENZO",
+}
+local selected_pedal_model = "Mercury7"
+
+-- NEW: Tap tempo tracking (last 4 taps)
+local tap_times = {}
+local function add_tap_time()
+  table.insert(tap_times, util.time())
+  if #tap_times > 4 then table.remove(tap_times, 1) end
+end
+
+local function calc_tempo_from_taps()
+  if #tap_times < 2 then return nil end
+  local total_time = tap_times[#tap_times] - tap_times[1]
+  local num_intervals = #tap_times - 1
+  if num_intervals < 1 then return nil end
+  local avg_beat = (total_time / num_intervals)
+  local bpm = 60 / avg_beat
+  return math.floor(bpm)
+end
+
+-- NEW: Modulation LFO state
+local lfo_enabled = false
+local lfo_rate = 1.0     -- Hz
+local lfo_depth = 50     -- 0-127
+local lfo_target_cc = 18 -- mix
+local lfo_phase = 0
+local lfo_base_val = 64
+
 -- ─── CC maps ──────────────────────────────────────────────────
 
 local OB_CC = {
@@ -464,6 +500,14 @@ local function bpm_to_enzo_delay(bpm)
   return clamp(math.floor((ms / 530) * 127), 0, 127)
 end
 
+-- NEW: Map quarter note duration to CC for delay sync
+local function bpm_to_delay_cc(bpm)
+  -- Quarter note in ms
+  local quarter_ms = (60000 / bpm)
+  -- Normalize to 0-127 range (assuming max ~2 seconds)
+  return clamp(math.floor((quarter_ms / 2000) * 127), 0, 127)
+end
+
 -- Send a tap CC pulse to LVX (CC99) and OTTOBIT (CC28).
 -- A 0-value follow-up after 50ms completes the tap gesture.
 local function send_tap_pulse()
@@ -628,6 +672,14 @@ morph_metro.event = function()
   send_cc(CH.OTTOBIT,  OB_CC.filter,    clamp(30+lfo*80,0,127))
   send_cc(CH.OTTOBIT,  OB_CC.smpl_rate, clamp(50+lfo*60,0,127))
 
+  -- NEW: Modulation LFO
+  if lfo_enabled then
+    lfo_phase = (lfo_phase + (lfo_rate * 0.05)) % (2*math.pi)
+    local lfo_val = math.sin(lfo_phase)
+    local cc_val = lfo_base_val + (lfo_val * lfo_depth / 2)
+    send_cc(CH[PEDAL_MODELS[selected_pedal_model]], lfo_target_cc, cc_val)
+  end
+
   redraw()
 end
 
@@ -679,8 +731,6 @@ local function grid_key(x, y, z)
 end
 
 -- ─── Screen zones and parameter display ────────────────────────
-
--- Get parameter label and value pairs for display
 local function get_pedal_params()
   local pname = pedal_names[sel_pedal]
   local params_list = last_params[pname] or (PRESETS[pname][sel_preset] and PRESETS[pname][sel_preset].data) or {}
@@ -895,7 +945,19 @@ function key(n,z)
     end
   elseif n == 2 then
     if z == 1 then
-      send_preset(pedal_names[sel_pedal], sel_preset)
+      if k1_held then
+        -- NEW: K1+K2 = tap tempo
+        add_tap_time()
+        local new_bpm = calc_tempo_from_taps()
+        if new_bpm then
+          params:set("clock_tempo", new_bpm)
+          send_tap_pulse()
+          print("Tap tempo: " .. new_bpm .. " BPM")
+        end
+      else
+        -- K2 alone: send preset
+        send_preset(pedal_names[sel_pedal], sel_preset)
+      end
     end
   elseif n == 3 then
     if z == 1 then
@@ -912,7 +974,7 @@ function key(n,z)
           morph_capture_pending = false
         end
       else
-        -- K3 alone: toggle auto-morph
+        -- K3 alone: toggle auto-morph (or could toggle LFO)
         auto_morph = not auto_morph
         if auto_morph then morph_metro.time=0.05; morph_metro:start()
         else morph_metro:stop() end
@@ -947,6 +1009,28 @@ function init()
   for k,v in pairs(ch_map) do
     params:set_action(k,function(val) CH[v]=val end)
   end
+
+  -- NEW: Pedal model selector
+  params:add_option("pedal_model", "Pedal Model",
+    {"Mercury7", "Polymoon", "Hedra", "Ottobit", "LVX", "Enzo"}, 1)
+  params:set_action("pedal_model", function(v)
+    local models = {"Mercury7", "Polymoon", "Hedra", "Ottobit", "LVX", "Enzo"}
+    selected_pedal_model = models[v]
+    print("Pedal model: " .. selected_pedal_model)
+  end)
+
+  -- NEW: Modulation LFO params
+  params:add_number("lfo_rate", "LFO Rate (Hz)", 0.1, 10, 1)
+  params:set_action("lfo_rate", function(v) lfo_rate = v end)
+
+  params:add_number("lfo_depth", "LFO Depth", 0, 127, 50)
+  params:set_action("lfo_depth", function(v) lfo_depth = v end)
+
+  params:add_number("lfo_target_cc", "LFO Target CC", 1, 127, 18)
+  params:set_action("lfo_target_cc", function(v) lfo_target_cc = v end)
+
+  params:add_option("lfo_enabled", "LFO On/Off", {"off", "on"}, 1)
+  params:set_action("lfo_enabled", function(v) lfo_enabled = (v == 2) end)
 
   params:add_separator("clock_sep","── Clock ──")
 
