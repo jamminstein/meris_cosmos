@@ -133,7 +133,8 @@ local EN_CC = {
 local function clamp(v,lo,hi) return math.max(lo,math.min(hi,v)) end
 local function rnd(lo,hi) return math.floor(lo + math.random()*(hi-lo)) end
 
-local function preset(cc_map, ...)\n  local t, args = {}, {...}
+local function preset(cc_map, ...)
+  local t, args = {}, {...}
   for i=1,#args,2 do
     local k,v = args[i], args[i+1]
     if cc_map[k] then table.insert(t,{cc=cc_map[k],val=v}) end
