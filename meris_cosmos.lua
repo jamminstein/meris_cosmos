@@ -40,6 +40,12 @@ engine.name = "None"
 local midi_out
 local midi_out_device = 1
 
+-- ── OP-XY MIDI CC output ──
+local opxy_out = nil
+local function opxy_cc(cc, val)
+  if opxy_out then opxy_out:cc(cc, math.floor(val), params:get("opxy_channel")) end
+end
+
 -- ─── Grid ─────────────────────────────────────
 local g = nil
 
@@ -485,6 +491,7 @@ local morph_capture_pending = false
 -- ─── MIDI helpers ─────────────────────────────────────────────
 local function send_cc(ch,cc,val)
   if midi_out then midi_out:cc(cc, math.floor(val), ch) end
+  opxy_cc(cc, val)
 end
 
 -- ─── Tempo-dependent CC helpers ───────────────────────────────
@@ -1030,6 +1037,13 @@ function init()
   params:add_option("lfo_enabled", "LFO On/Off", {"off", "on"}, 1)
   params:set_action("lfo_enabled", function(v) lfo_enabled = (v == 2) end)
 
+  params:add_separator("OP-XY")
+  params:add_number("opxy_device","OP-XY MIDI Device",1,4,2)
+  params:set_action("opxy_device",function(v)
+    opxy_out=midi.connect(v)
+  end)
+  params:add_number("opxy_channel","OP-XY MIDI Channel",1,16,1)
+
   params:add_separator("clock_sep","── Clock ──")
 
   -- Hook into the Norns system clock_tempo param so any tempo change
@@ -1048,6 +1062,7 @@ function init()
 
   params:bang()
   midi_out = midi.connect(midi_out_device)
+  opxy_out = midi.connect(params:get("opxy_device"))
   math.randomseed(os.time())
 
   -- Connect grid
