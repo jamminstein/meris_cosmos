@@ -1095,5 +1095,7 @@ function cleanup()
   screen_redraw_metro:stop()
   if morph_co then clock.cancel(morph_co) end
   if clock_co then clock.cancel(clock_co) end
+  if midi_out then for ch=1,16 do midi_out:cc(123,0,ch) end end
+  if opxy_out then for ch=1,16 do opxy_out:cc(123,0,ch) end end
   if g then g:all(0); g:refresh() end
 end
