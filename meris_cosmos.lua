@@ -676,8 +676,11 @@ morph_metro.event = function()
   if lfo_enabled then
     lfo_phase = (lfo_phase + (lfo_rate * 0.05)) % (2*math.pi)
     local lfo_val = math.sin(lfo_phase)
+    -- Dynamically read MIDI channel from params
+    local pedal_key = selected_pedal_model
+    local ch = params:get(pedal_key:lower() .. "_ch") or CH[pedal_key] or 1
     local cc_val = lfo_base_val + (lfo_val * lfo_depth / 2)
-    send_cc(CH[PEDAL_MODELS[selected_pedal_model]], lfo_target_cc, cc_val)
+    send_cc(ch, lfo_target_cc, cc_val)
   end
 
   redraw()
@@ -940,6 +943,8 @@ function key(n,z)
       k1_held = true
     else
       k1_held = false
+      morph_from_state = {}
+      morph_to_state = {}
       morph_capture_pending = false
       redraw()
     end
