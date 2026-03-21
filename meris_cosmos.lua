@@ -127,8 +127,7 @@ local EN_CC = {
 local function clamp(v,lo,hi) return math.max(lo,math.min(hi,v)) end
 local function rnd(lo,hi) return math.floor(lo + math.random()*(hi-lo)) end
 
-local function preset(cc_map, ...)
-  local t, args = {}, {...}
+local function preset(cc_map, ...)\n  local t, args = {}, {...}
   for i=1,#args,2 do
     local k,v = args[i], args[i+1]
     if cc_map[k] then table.insert(t,{cc=cc_map[k],val=v}) end
@@ -762,7 +761,7 @@ local function get_pedal_params()
   }
   
   return params_list, cc_to_label
-end
+nend
 
 -- ─── DISPLAY: Redesigned screen rendering ──────────────────────
 function redraw()
@@ -793,17 +792,13 @@ function redraw()
     screen.level(15)
     screen.font_size(16)
     screen.move(64, 35)
-    screen.text_align_center()
     screen.text(pname)
-    screen.text_align_left()
   else
     -- Normal center display
     screen.level(10)
     screen.font_size(8)
     screen.move(64, 7)
-    screen.text_align_center()
     screen.text(pname)
-    screen.text_align_left()
   end
   
   -- Page dots (5 dots, one per pedal)
@@ -908,9 +903,7 @@ function redraw()
     screen.level(15)
     screen.font_size(14)
     screen.move(64, 32)
-    screen.text_align_center()
     screen.text(popup_param or "")
-    screen.text_align_left()
   end
   
   screen.update()
