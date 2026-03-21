@@ -769,7 +769,7 @@ local function get_pedal_params()
   }
   
   return params_list, cc_to_label
-nend
+end
 
 -- ─── DISPLAY: Redesigned screen rendering ──────────────────────
 function redraw()
