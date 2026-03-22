@@ -774,7 +774,7 @@ end
 -- ─── DISPLAY: Redesigned screen rendering ──────────────────────
 function redraw()
   screen.clear()
-  screen.aa(1)
+  screen.aa(0)
   
   local pname = pedal_names[sel_pedal]
   local pset = PRESETS[pname][sel_preset]
